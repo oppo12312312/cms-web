@@ -1,0 +1,106 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 4269795 */
+  src: url("iconfont.woff2?t=1717831259326") format("woff2"),
+    url("iconfont.woff?t=1717831259326") format("woff"),
+    url("iconfont.ttf?t=1717831259326") format("truetype");
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-role:before {
+  content: "\e74a";
+}
+
+.icon-loginlog:before {
+  content: "\e628";
+}
+
+.icon-user:before {
+  content: "\e70c";
+}
+
+.icon-syslog:before {
+  content: "\e66b";
+}
+
+.icon-sys:before {
+  content: "\e622";
+}
+
+.icon-optlog:before {
+  content: "\e64a";
+}
+
+.icon-msg:before {
+  content: "\e65d";
+}
+
+.icon-engineer:before {
+  content: "\e742";
+}
+
+.icon-base-data:before {
+  content: "\e63e";
+}
+
+.icon-action:before {
+  content: "\e682";
+}
+
+.icon-dept:before {
+  content: "\e65e";
+}
+
+.icon-workbench:before {
+  content: "\e692";
+}
+
+.icon-input:before {
+  content: "\e650";
+}
+
+.icon-task:before {
+  content: "\e70f";
+}
+
+.icon-cooperate:before {
+  content: "\e60a";
+}
+
+.icon-version:before {
+  content: "\e717";
+}
+
+.icon-record:before {
+  content: "\e6af";
+}
+
+.icon-audit:before {
+  content: "\e665";
+}
+
+.icon-home:before {
+  content: "\e751";
+}
+
+.icon-gt:before {
+  content: "\e68c";
+}
+
+.icon-rl:before {
+  content: "\e60c";
+}
+
+.icon-hc:before {
+  content: "\e918";
+}
+
+.icon-board:before {
+  content: "\e69e";
+}

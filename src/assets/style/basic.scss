@@ -1,0 +1,88 @@
+.animated {
+  -webkit-animation-duration: 0.28s !important;
+  animation-duration: 0.28s !important;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+.show {
+  display: block !important;
+}
+
+.hide {
+  display: none !important;
+}
+
+.txt-left {
+  text-align: left;
+}
+
+.txt-center {
+  text-align: center;
+}
+
+.txt-right {
+  text-align: right;
+}
+
+.txt-bold {
+  font-weight: bold;
+}
+
+.ellipsTXt {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: " ";
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+.fl {
+  float: left;
+}
+
+.fr {
+  float: right;
+}
+
+.disIbk {
+  display: inline-block;
+}
+
+.cursorPoint {
+  cursor: pointer;
+}
+
+.mar-bom15 {
+  margin-bottom: 15px;
+}
+
+.mar-left15 {
+  margin-left: 15px !important;
+}
+
+.ellipsTxt {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -o-text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.displayIbk {
+  display: inline-block;
+}
+
+@media only screen and (min-width: 1200px) {
+  .col-20 {
+    width: 20% !important;
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "id": "4269795",
+  "name": "base",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "857684",
+      "name": "角色管理",
+      "font_class": "role",
+      "unicode": "e74a",
+      "unicode_decimal": 59210
+    },
+    {
+      "icon_id": "3090751",
+      "name": "登录日志",
+      "font_class": "loginlog",
+      "unicode": "e628",
+      "unicode_decimal": 58920
+    },
+    {
+      "icon_id": "4676490",
+      "name": "用户管理",
+      "font_class": "user",
+      "unicode": "e70c",
+      "unicode_decimal": 59148
+    },
+    {
+      "icon_id": "9908534",
+      "name": "系统日志",
+      "font_class": "syslog",
+      "unicode": "e66b",
+      "unicode_decimal": 58987
+    },
+    {
+      "icon_id": "26674516",
+      "name": "系统管理",
+      "font_class": "sys",
+      "unicode": "e622",
+      "unicode_decimal": 58914
+    },
+    {
+      "icon_id": "29186478",
+      "name": "操作日志",
+      "font_class": "optlog",
+      "unicode": "e64a",
+      "unicode_decimal": 58954
+    },
+    {
+      "icon_id": "774445",
+      "name": "消息报表",
+      "font_class": "msg",
+      "unicode": "e65d",
+      "unicode_decimal": 58973
+    },
+    {
+      "icon_id": "5735245",
+      "name": "工程管理",
+      "font_class": "engineer",
+      "unicode": "e742",
+      "unicode_decimal": 59202
+    },
+    {
+      "icon_id": "7045322",
+      "name": "基础数据管理",
+      "font_class": "base-data",
+      "unicode": "e63e",
+      "unicode_decimal": 58942
+    },
+    {
+      "icon_id": "7913269",
+      "name": "行动管理",
+      "font_class": "action",
+      "unicode": "e682",
+      "unicode_decimal": 59010
+    },
+    {
+      "icon_id": "30122720",
+      "name": "单位管理",
+      "font_class": "dept",
+      "unicode": "e65e",
+      "unicode_decimal": 58974
+    },
+    {
+      "icon_id": "4143386",
+      "name": "任务工作台",
+      "font_class": "workbench",
+      "unicode": "e692",
+      "unicode_decimal": 59026
+    },
+    {
+      "icon_id": "6204762",
+      "name": "任务录入",
+      "font_class": "input",
+      "unicode": "e650",
+      "unicode_decimal": 58960
+    },
+    {
+      "icon_id": "7874260",
+      "name": "任务管理",
+      "font_class": "task",
+      "unicode": "e70f",
+      "unicode_decimal": 59151
+    },
+    {
+      "icon_id": "7992458",
+      "name": "协同任务",
+      "font_class": "cooperate",
+      "unicode": "e60a",
+      "unicode_decimal": 58890
+    },
+    {
+      "icon_id": "16840391",
+      "name": "版本",
+      "font_class": "version",
+      "unicode": "e717",
+      "unicode_decimal": 59159
+    },
+    {
+      "icon_id": "21102451",
+      "name": "审核记录",
+      "font_class": "record",
+      "unicode": "e6af",
+      "unicode_decimal": 59055
+    },
+    {
+      "icon_id": "24254818",
+      "name": "审核",
+      "font_class": "audit",
+      "unicode": "e665",
+      "unicode_decimal": 58981
+    },
+    {
+      "icon_id": "577364",
+      "name": "首页",
+      "font_class": "home",
+      "unicode": "e751",
+      "unicode_decimal": 59217
+    },
+    {
+      "icon_id": "3082551",
+      "name": "甘特看板",
+      "font_class": "gt",
+      "unicode": "e68c",
+      "unicode_decimal": 59020
+    },
+    {
+      "icon_id": "15557868",
+      "name": "日历看板",
+      "font_class": "rl",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "24716948",
+      "name": "画册看板",
+      "font_class": "hc",
+      "unicode": "e918",
+      "unicode_decimal": 59672
+    },
+    {
+      "icon_id": "25086924",
+      "name": "看板管理",
+      "font_class": "board",
+      "unicode": "e69e",
+      "unicode_decimal": 59038
+    }
+  ]
+}

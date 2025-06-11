@@ -1,0 +1,640 @@
+<template>
+  <div>
+    <div class="tableFiltersWrap">
+      <el-row class="txt-right">
+        <el-col>
+          <v-form :fields="fields" :fieldsData="tableParams">
+            <el-col :span="6">
+              <v-xyzybj-select
+                :layout="['xy', 'bj']"
+                v-model="tableParams"
+              ></v-xyzybj-select>
+            </el-col>
+            <el-col :span="4" class="txt-left">
+              <el-button type="primary" @click="fecthData">查询</el-button>
+              <el-button type="default" @click="reloadData">清空</el-button>
+            </el-col>
+          </v-form>
+        </el-col>
+      </el-row>
+    </div>
+    <el-card shadow="never" class="card-header-tabs">
+      <div slot="header" class="clearfix">
+        <el-tabs v-model="activeName" @tab-click="tabClick">
+          <el-tab-pane label="待审批" name="approve"></el-tab-pane>
+          <el-tab-pane label="全部申请" name="list"></el-tab-pane>
+        </el-tabs>
+        <div class="btns-wrap">
+          <v-table-set-btn
+            :columns="columns"
+            :download="exportsExecutes"
+            file-name="学生证补办数据"
+            @colsChange="colsChange"
+          >
+          </v-table-set-btn>
+          <v-btn
+            v-if="activeName == 'approve'"
+            class="fn-ml10"
+            icon="el-icon-check"
+            txt="批量审核"
+            @handleClick="openSaveDialog({}, 3)"
+          ></v-btn>
+        </div>
+      </div>
+      <v-page>
+        <el-row class="forItem">
+          <el-col class="con">
+            <v-form :fields="fields2" :fieldsData="tableParams"></v-form>
+          </el-col>
+        </el-row>
+        <basic-table
+          :columns="columns"
+          :call-server="callServer"
+          @selectionChange="selectionChange"
+          v-model="tableParams"
+          ref="basicTable"
+          :query="tableQuery"
+        >
+        </basic-table>
+      </v-page>
+
+      <v-dialog
+        ref="saveDialog"
+        width="960px"
+        title="学生证补办审批"
+        :show-confirm="false"
+        :show-footer="activeName == 'approve' || currentItem.flag == 'yes'"
+        :close-on-click="
+          activeName == 'approve' || currentItem.flag == 'yes' ? false : true
+        "
+      >
+        <approve-form
+          ref="saveItemForm"
+          :patch-data="currentItem"
+        ></approve-form>
+        <template
+          slot="footer"
+          slot-scope="scope"
+          v-if="activeName == 'approve'"
+        >
+          <div class="disIbk fn-ml10">
+            <el-button type="danger" :loading="scope.posting" @click="refuse"
+              >审批拒绝</el-button
+            >
+            <el-button type="danger" :loading="scope.posting" @click="turnDown"
+              >审批打回</el-button
+            >
+            <el-button
+              v-if="showPass"
+              type="primary"
+              @click="pass"
+              :loading="scope.posting"
+              >审批通过</el-button
+            >
+            <el-button
+              v-if="currentItem.status == 3"
+              type="primary"
+              @click="pass"
+              :loading="scope.posting"
+              >审批通过</el-button
+            >
+          </div>
+        </template>
+      </v-dialog>
+    </el-card>
+  </div>
+</template>
+
+<script>
+import basicTable from "_c/tables";
+import approveForm from "./components/approveForm";
+import nextForm from "./components/nextForm";
+import approveDialog from "_c/approveDialog";
+
+import { selectApprovalTrack, getStatus } from "@/api/process";
+
+import {
+  admApproveList,
+  admApproveListExport,
+  stdApproveDetail,
+  doExecute,
+  doExecutes,
+} from "@/api/studentCard";
+import { getCodeOptions, getXnOpts } from "@/filters/options";
+
+export default {
+  components: {
+    basicTable,
+    approveForm,
+    nextForm,
+    approveDialog,
+  },
+  data() {
+    const activeName = this.$route.query.activeName || "approve";
+    return {
+      xszbbOpts: [],
+      activeName: activeName,
+      tableParams: {},
+      defid: "xszbbdef",
+      multipleSelection: [],
+      currentItem: {},
+      nextStepData: {},
+      showFields: [],
+      xnOpts: [],
+      resultOpts: [
+        {
+          label: "全部状态选项",
+          value: "",
+        },
+      ],
+      currentIndex: "0",
+      steps: [],
+    };
+  },
+  created() {
+    getCodeOptions("XG_xszbb", true).then((data) => {
+      this.xszbbOpts = this.xszbbOpts.concat(data);
+    });
+    getXnOpts().then((data) => {
+      this.xnOpts = data;
+    });
+    getStatus("xszbb").then((data) => {
+      for (let i = 0; i < data.data.length; i++) {
+        this.resultOpts.push({
+          label: data.data[i],
+          value: data.data[i],
+        });
+      }
+    });
+    this.$EventBus.$on("currentApprove", (data) => {
+      this.currentIndex = data.currentIndex;
+      this.steps = data.steps;
+    });
+  },
+  computed: {
+    columns: function () {
+      const cols = [
+        {
+          label: "学号",
+          prop: "xh",
+        },
+        {
+          label: "姓名",
+          prop: "xm",
+        },
+        {
+          label: this.lang_college,
+          prop: "xy",
+        },
+        {
+          label: "班级",
+          prop: "bjmc",
+        },
+        {
+          label: "联系电话",
+          prop: "lxdh",
+        },
+        {
+          label: "办理原因",
+          prop: "blyy",
+        },
+        {
+          label: "审批状态",
+          prop: "lastResults",
+        },
+        {
+          label: "操作",
+          fixed: "right",
+          width: "80px",
+          render: (h, row) => {
+            return (
+              <div>
+                <el-button
+                  type="text"
+                  onClick={() =>
+                    this.openSaveDialog(
+                      row,
+                      this.activeName == "approve" ? "1" : "2"
+                    )
+                  }
+                  size="middle"
+                  class="txt-highlight"
+                >
+                  {this.activeName == "approve" ? "审核" : "查看"}
+                </el-button>
+              </div>
+            );
+          },
+        },
+      ];
+
+      if (this.showFields.length) {
+        for (let i = 0; i < cols.length; i++) {
+          if (cols[i].prop || cols[i].field) {
+            const field = cols[i].prop || cols[i].field;
+            cols[i].isHide = this.showFields.indexOf(field) > -1 ? false : true;
+          }
+        }
+      }
+      return cols;
+    },
+    tableQuery: function () {
+      if (this.activeName == "approve") {
+        return {
+          type: "0",
+        };
+      } else {
+        return {
+          type: "2",
+        };
+      }
+    },
+    fields: function () {
+      return [
+        {
+          label: "",
+          prop: "xh",
+          span: 3,
+          type: "text",
+          placeholder: "请输入学号",
+        },
+        {
+          label: "",
+          prop: "xm",
+          span: 3,
+          type: "text",
+          placeholder: "请输入姓名",
+        },
+        {
+          label: "",
+          prop: "blyy",
+          span: 4,
+          type: "select",
+          placeholder: "请选择补办类型",
+          options: this.xszbbOpts,
+        },
+        /* {
+          label: "",
+          prop: "lastResults",
+          span: 3,
+          type: "select",
+          placeholder: "请选择审批状态",
+          show: this.activeName == "approve" ? "false" : "true",
+          options: this.resultOpts,
+        }, */
+        {
+          label: "",
+          prop: "xn",
+          span: 3,
+          type: "select",
+          placeholder: "请选择学年",
+          options: this.xnOpts,
+        },
+      ];
+    },
+    fields2: function () {
+      return [
+        {
+          label: "",
+          prop: "lastResults",
+          span: 6,
+          type: "select",
+          placeholder: "请选择审批状态",
+          show: this.activeName == "approve" ? "false" : "true",
+          options: this.resultOpts,
+        },
+      ];
+    },
+    showPass: function () {
+      return this.currentItem.status != 3;
+    },
+  },
+  methods: {
+    emitIndex(approveData) {
+      this.currentIndex = approveData.currentIndex;
+      this.steps = approveData.steps;
+    },
+    colsChange(showFields) {
+      this.showFields = showFields;
+    },
+    callServer(pagination) {
+      if (this.activeName == "approve") {
+        this.tableParams.type = "0";
+      } else {
+        this.tableParams.type = "2";
+      }
+      return admApproveList;
+    },
+    exportsExecutes(fields, filename) {
+      return admApproveListExport(
+        Object.assign(this.tableParams, {
+          excelDtos: fields,
+        }),
+        filename,
+        { type: this.tableParams.type }
+      );
+    },
+    save() {
+      const me = this;
+      const roleids = this.ruleForm.resourceids;
+      grantRole({
+        userId: me.currentItem.userid,
+        roleids: roleids.join(","),
+      }).then((data) => {
+        me.toast("操作成功", "success");
+      });
+    },
+    cancel() {
+      this.showRight = false;
+    },
+    fecthData() {
+      if (this.$refs.basicTable) {
+        this.$refs.basicTable.fecthData();
+      }
+    },
+    reloadData() {
+      if (this.$refs.basicTable) {
+        this.tableParams = {
+          type: this.tableParams.type,
+        };
+        this.$refs.basicTable.reload();
+      }
+    },
+    selectionChange(val) {
+      this.multipleSelection = val;
+    },
+    openSaveDialog(item, status) {
+      this.currentItem.doExecute = doExecute;
+      if (status == 3) {
+        if (this.multipleSelection.length) {
+          this.currentItem.tableData = this.multipleSelection;
+          this.currentItem.columns = this.copy(this.columns).splice(
+            0,
+            this.columns.length - 2
+          );
+          this.currentItem.status = status;
+          this.currentItem.businessid = this.multipleSelection[0].applyid;
+          //this.defid = this.multipleSelection[0].defid;
+          //this.$refs.approveDialog.show();
+          this.$refs.saveDialog.dialogVisible = true;
+        } else {
+          this.toast("请先选择一条记录", "warning");
+        }
+      } else {
+        stdApproveDetail({ applyid: item.applyid }).then((data) => {
+          this.currentItem = data.data;
+          this.currentItem.flag = item.flag;
+          this.currentItem.status = status;
+          //this.$refs.approveDialog.show();
+          this.$refs.saveDialog.dialogVisible = true;
+        });
+      }
+    },
+    saveItem() {
+      const me = this;
+      const query = {
+        defid: this.defid,
+        spyj: this.nextStepData.spyj,
+        nextstepid: this.$refs.nextForm.radio,
+        status: this.nextStepData.aduitStatus,
+        isRetrial: this.activeName == "approve" ? "0" : "1",
+      };
+      if (this.currentItem.status == 3) {
+        const ids = [];
+        for (let i = 0; i < this.multipleSelection.length; i++) {
+          ids.push(this.multipleSelection[i].applyid);
+        }
+        query.ids = ids.join(",");
+        doExecutes(query)
+          .then(() => {
+            me.$refs.nextStepDialog.close();
+            me.$refs.saveDialog.close();
+            me.toast("操作成功", "success");
+            me.fecthData();
+          })
+          .catch((err) => {
+            me.$refs.nextStepDialog.posting = false;
+          });
+      } else {
+        query.businessid = this.currentItem.applyid;
+        doExecute(query)
+          .then(() => {
+            me.$refs.nextStepDialog.close();
+            me.$refs.saveDialog.close();
+            me.toast("操作成功", "success");
+            me.fecthData();
+          })
+          .catch((err) => {
+            me.$refs.nextStepDialog.posting = false;
+          });
+      }
+    },
+    refuse() {
+      const me = this;
+      this.$refs.saveItemForm.validate((data) => {
+        this.$refs.saveDialog.posting = true;
+        const query = {
+          defid: this.defid,
+          spyj: data.spyj,
+          nextstepid: "",
+          status: 2,
+          isRetrial: this.activeName == "approve" ? "0" : "1",
+        };
+        if (this.currentItem.status == 3) {
+          const ids = [];
+          for (let i = 0; i < this.multipleSelection.length; i++) {
+            ids.push(this.multipleSelection[i].applyid);
+          }
+          query.ids = ids.join(",");
+          doExecutes(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("操作成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        } else {
+          query.businessid = this.currentItem.applyid;
+          doExecute(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("操作成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        }
+      });
+    },
+    turnDown() {
+      const me = this;
+      this.$refs.saveItemForm.validate((data) => {
+        this.$refs.saveDialog.posting = true;
+        const query = {
+          defid: this.defid,
+          spyj: data.spyj,
+          nextstepid: "",
+          status: "9",
+          isRetrial: this.activeName == "approve" ? "0" : "1",
+        };
+        if (this.currentItem.status == 3) {
+          const ids = [];
+          for (let i = 0; i < this.multipleSelection.length; i++) {
+            ids.push(this.multipleSelection[i].applyid);
+          }
+          query.ids = ids.join(",");
+          query.businessid = this.this.multipleSelection[i].applyid;
+          doExecutes(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("操作成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        } else {
+          query.businessid = this.currentItem.applyid;
+          doExecute(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("操作成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        }
+      });
+    },
+    pass() {
+      const me = this;
+      this.$refs.saveItemForm.validate((data) => {
+        this.$refs.saveDialog.posting = true;
+        const query = {
+          defid: me.defid,
+          spyj: data.spyj,
+          nextstepid: "",
+          status: "1",
+          isRetrial: this.activeName == "approve" ? "0" : "1",
+        };
+        if (this.currentItem.status == 3) {
+          const ids = [];
+          for (let i = 0; i < this.multipleSelection.length; i++) {
+            ids.push(this.multipleSelection[i].applyid);
+          }
+          query.ids = ids.join(",");
+          doExecutes(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("操作成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        } else {
+          query.businessid = this.currentItem.applyid;
+          doExecute(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("操作成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        }
+      });
+    },
+    closeProcess() {
+      const me = this;
+      this.$refs.saveItemForm.validate((data) => {
+        this.$refs.saveDialog.posting = true;
+        const query = {
+          defid: this.defid,
+          spyj: data.spyj,
+          nextstepid: "",
+          status: 3,
+          isRetrial: this.activeName == "approve" ? "0" : "1",
+        };
+        if (this.currentItem.status == 3) {
+          const ids = [];
+          for (let i = 0; i < this.multipleSelection.length; i++) {
+            ids.push(this.multipleSelection[i].applyid);
+          }
+          query.ids = ids.join(",");
+          doExecutes(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("操作成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        } else {
+          query.businessid = this.currentItem.applyid;
+          doExecute(query)
+            .then(() => {
+              me.$refs.saveDialog.close();
+              me.toast("结束成功", "success");
+              me.fecthData();
+            })
+            .catch((err) => {
+              me.$refs.saveDialog.posting = false;
+            });
+        }
+      });
+    },
+    tabClick(tab) {
+      this.activeName = tab.name;
+      this.$router.replace({
+        name: this.$route.name,
+        query: {
+          activeName: tab.name,
+        },
+      });
+      this.$refs.basicTable.reload();
+    },
+    del(item) {
+      const me = this;
+      const dels = [];
+      const ids = [];
+      if (this.multipleSelection.length) {
+        for (const ml of this.multipleSelection) {
+          dels.push(ml.bjmc);
+          ids.push(ml.id);
+        }
+        this.alert("取消任命：" + dels.join(",") + "。", "确认要取消任命吗？", {
+          type: "warning",
+          request() {
+            return disAppointFdy({
+              bjids: ids,
+            });
+          },
+          success() {
+            me.toast("取消成功", "success");
+            me.fecthData1();
+          },
+        });
+      } else {
+        this.toast("请选择一名辅导员", "warning");
+      }
+    },
+  },
+  watch: {
+    "tableParams.lastResults": function () {
+      this.fecthData();
+    },
+    $route: function () {
+      this.fecthData();
+    },
+  },
+};
+</script>
+
+<style lang="scss"></style>
