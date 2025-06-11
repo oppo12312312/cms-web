@@ -818,20 +818,17 @@ export default {
               scheduleId: this.scheduleId,
             });
           },
-          success: () => {
-            this.toast("删除成功", "success");
+          success: (data) => {
+            // 从接口返回的data中更新scheduleId
+            if (data && data.data && data.data.length > 0) {
+              this.scheduleId = data.data[0].scheduleId;
+            }
             // 刷新已排线列表
             this.getEOrderList("2");
             // 更新地图绘制
             this.pathList = [];
             // 重新获取路径信息
-            if (this.scheduleId) {
-              view({ scheduleId: this.scheduleId }).then((res) => {
-                if (res.data && res.data.list && res.data.list.length > 0) {
-                  this.parsePath(res.data.list);
-                }
-              });
-            }
+            this.parsePath(data.data);
           },
         }
       );

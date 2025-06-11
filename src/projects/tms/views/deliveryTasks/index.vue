@@ -51,7 +51,12 @@
 </template>
 
 <script>
-import { dispatchTask, exportList, searchPSOrders } from "#/api/deliveryTasks";
+import {
+  dispatchTask,
+  exportList,
+  searchPSOrders,
+  updatePSOrderStatus,
+} from "#/api/deliveryTasks";
 import basicTable from "_c/tables";
 import { codeTreeList } from "@/api/code";
 import { get } from "sortablejs";
@@ -113,7 +118,7 @@ export default {
           prop: "userNickname",
           type: "text",
           span: 4,
-          placeholder: "请输入客户姓名",
+          placeholder: "请输入客户名称",
         },
         {
           label: "",
@@ -129,226 +134,137 @@ export default {
       ];
     },
     columns() {
-      if (this.activeName == "-1") {
-        return [
-          {
-            label: "配送订单编号",
-            prop: "taskId",
+      const tagType = {
+        13: "warning",
+        14: "success",
+        15: "info",
+      };
+      const baseColumns = [
+        // {
+        //   label: "配送订单编号",
+        //   prop: "platformOrderNumber",
+        // },
+        {
+          label: "客户信息",
+          prop: "userNickname",
+          render: (h, row) => {
+            return (
+              <div>
+                <div class="ps-info-m">{row.userNickname || "-"}</div>
+                <div class="ps-info">{row.deliveryAddress || "-"}</div>
+              </div>
+            );
           },
-          {
-            label: "客户信息",
-            prop: "khmc",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">{row.khmc || "-"}</div>
-                  <div class="ps-info">{row.address || "-"}</div>
-                </div>
-              );
-            },
+        },
+        {
+          label: "用户订单",
+          prop: "orderNumber",
+          render: (h, row) => {
+            return (
+              <div>
+                <div class="ps-info-m">仓库司机配送</div>
+                <div class="ps-info">{row.orderNumber}</div>
+              </div>
+            );
           },
-          {
-            label: "用户订单",
-            prop: "orderNo",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">仓库司机配送</div>
-                  <div class="ps-info">{row.orderNo}</div>
-                </div>
-              );
-            },
+        },
+        {
+          label: "订单金额",
+          prop: "totalCost",
+          render: (h, row) => {
+            return (
+              <div>
+                <div class="ps-info-m">订单总额：{row.totalCost}</div>
+                <div class="ps-info">实际支付：{row.actualPaymentAmount}</div>
+              </div>
+            );
           },
-          {
-            label: "订单金额",
-            prop: "totalPrice",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">订单总额：{row.totalPrice}</div>
-                  <div class="ps-info">实际支付：{row.payPrice}</div>
-                </div>
-              );
-            },
+        },
+        {
+          label: "司机",
+          prop: "deliveryDriver",
+          render: (h, row) => {
+            return (
+              <div>
+                <div class="ps-info-m">{row.deliveryDriver || "-"}</div>
+              </div>
+            );
           },
-          {
-            label: "司机",
-            prop: "driverName",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">
-                    {row.driverName || "-"} <span class="fg">|</span>{" "}
-                    {row.plateNo || "-"}
-                  </div>
-                  <div class="ps-info">{row.phone || "-"}</div>
-                </div>
-              );
-            },
+        },
+        {
+          label: "送货时间",
+          prop: "deliveryTime",
+          width: 170,
+          render: (h, row) => {
+            return (
+              <div>
+                <div class="ps-info-m">{row.deliveryTime || "-"}</div>
+                <div class="ps-info">{row.signForTime || "-"}</div>
+              </div>
+            );
           },
-          {
-            label: "送货时间",
-            prop: "startTime",
-            width: 170,
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">{row.startTime || "-"}</div>
-                  <div class="ps-info">{row.endTime || "-"}</div>
-                </div>
-              );
-            },
+        },
+        {
+          label: "订单状态",
+          width: 170,
+          prop: "orderStatus",
+          render: (h, row) => {
+            return (
+              <div>
+                <el-tag
+                  v-show={row.orderStatus == "13"}
+                  size="mini"
+                  type={tagType[row.orderStatus] || "info"}
+                >
+                  {row.orderStatusName}
+                </el-tag>
+              </div>
+            );
           },
-          {
-            label: "订单状态",
-            width: 170,
-            prop: "statusName",
-            render: (h, row) => {
-              return (
-                <div>
-                  <el-tag v-show={row.status == 0} size="mini" type="warning">
-                    待配送
-                  </el-tag>
-                  <el-tag v-show={row.status == 1} size="mini">
-                    待收货
-                  </el-tag>
-                  <el-tag v-show={row.status == 2} size="mini" type="success">
-                    已收货
-                  </el-tag>
-                </div>
-              );
-            },
-          },
-          {
-            label: "操作",
-            fixed: "right",
-            width: 105,
-            render: (h, row) => {
-              return (
-                <div>
-                  <el-button type="text" size="middle" class="txt-highlight">
-                    详情
-                  </el-button>
-                  <el-button type="text" size="middle" class="txt-highlight">
-                    打印
-                  </el-button>
-                </div>
-              );
-            },
-          },
-        ];
-      } else {
-        return [
-          {
-            label: "配送订单编号",
-            prop: "taskId",
-          },
-          {
-            label: "客户信息",
-            prop: "khmc",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">{row.khmc || "-"}</div>
-                  <div class="ps-info">{row.address || "-"}</div>
-                </div>
-              );
-            },
-          },
-          {
-            label: "用户订单",
-            prop: "orderNo",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">仓库司机配送</div>
-                  <div class="ps-info">{row.orderNo}</div>
-                </div>
-              );
-            },
-          },
-          {
-            label: "订单金额",
-            prop: "totalPrice",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">订单总额：{row.totalPrice}</div>
-                  <div class="ps-info">实际支付：{row.payPrice}</div>
-                </div>
-              );
-            },
-          },
-          {
-            label: "司机",
-            prop: "driverName",
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">
-                    {row.driverName || "-"} <span class="fg">|</span>{" "}
-                    {row.plateNo || "-"}
-                  </div>
-                  <div class="ps-info">{row.phone || "-"}</div>
-                </div>
-              );
-            },
-          },
-          {
-            label: "送货时间",
-            prop: "startTime",
-            width: 170,
-            render: (h, row) => {
-              return (
-                <div>
-                  <div class="ps-info-m">{row.startTime || "-"}</div>
-                  <div class="ps-info">{row.endTime || "-"}</div>
-                </div>
-              );
-            },
-          },
-          {
-            label: "订单状态",
-            width: 170,
-            prop: "statusName",
-            render: (h, row) => {
-              return (
-                <div>
-                  <el-tag v-show={row.status == 0} size="mini" type="warning">
-                    待配送
-                  </el-tag>
-                  <el-tag v-show={row.status == 1} size="mini">
-                    待收货
-                  </el-tag>
-                  <el-tag v-show={row.status == 2} size="mini" type="success">
-                    已收货
-                  </el-tag>
-                </div>
-              );
-            },
-          },
-          {
-            label: "操作",
-            fixed: "right",
-            width: 135,
-            render: (h, row) => {
-              return (
-                <div>
-                  <el-button type="text" size="middle" class="txt-highlight">
-                    配送
-                  </el-button>
-                  <el-button type="text" size="middle" class="txt-highlight">
-                    详情
-                  </el-button>
-                  <el-button type="text" size="middle" class="txt-highlight">
-                    打印
-                  </el-button>
-                </div>
-              );
-            },
-          },
-        ];
-      }
+        },
+      ];
+
+      // 操作列配置
+      const actionName = {
+        13: "出库",
+        12: "发车",
+      };
+      const actionColumn = {
+        label: "操作",
+        fixed: "right",
+        width: 135,
+        render: (h, row) => {
+          const buttons = [];
+
+          // 非全部状态显示配送按钮
+          if (actionName[row.orderStatus]) {
+            buttons.push(
+              <el-button
+                type="text"
+                size="middle"
+                class="txt-highlight"
+                onClick={() => this.handleDelivery(row)}
+              >
+                {actionName[row.orderStatus]}
+              </el-button>
+            );
+          }
+
+          // 所有状态都显示详情和打印按钮
+          buttons.push(
+            <el-button type="text" size="middle" class="txt-highlight">
+              详情
+            </el-button>,
+            <el-button type="text" size="middle" class="txt-highlight">
+              打印
+            </el-button>
+          );
+
+          return <div>{buttons}</div>;
+        },
+      };
+
+      return [...baseColumns, actionColumn];
     },
   },
   methods: {
@@ -430,6 +346,19 @@ export default {
     },
     exportList(columns, filename) {
       exportList({ ...this.tableParams, excelDtos: columns }, filename);
+    },
+    // 处理配送操作
+    handleDelivery(row) {
+      this.alert(`确定要开始配送订单：${row.orderNumber} 吗？`, "确认配送", {
+        type: "warning",
+        request: () => {
+          return updatePSOrderStatus({ orderNo: row.orderNumber });
+        },
+        success: () => {
+          this.toast("配送状态更新成功", "success");
+          this.fecthData();
+        },
+      });
     },
   },
 };

@@ -38,3 +38,12 @@ export function searchPSOrders(data) {
     data,
   });
 }
+
+// 更新配送订单状态
+export function updatePSOrderStatus(params) {
+  return ax.request({
+    url: "/orderInfo/updatePSOrderStatus",
+    method: "post",
+    params,
+  });
+}
